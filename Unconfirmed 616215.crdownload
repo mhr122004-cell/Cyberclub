@@ -1,0 +1,27 @@
+# ===== PLANT FAKE ATTACKER ACTIVITY (for testing recon.ps1) =====
+
+Write-Host "Planting fake admin #1 (Domain Admins)..." -ForegroundColor Yellow
+New-ADUser -Name "svc_backup2" -SamAccountName svc_backup2 -AccountPassword (ConvertTo-SecureString "Temp#Pass12345" -AsPlainText -Force) -Enabled $true
+Add-ADGroupMember -Identity "Domain Admins" -Members svc_backup2
+Set-ADUser -Identity svc_backup2 -PasswordNeverExpires $true
+
+Write-Host "Planting fake admin #2 (Account Operators)..." -ForegroundColor Yellow
+New-ADUser -Name "svc_helpdesk" -SamAccountName svc_helpdesk -AccountPassword (ConvertTo-SecureString "Temp#Pass12345" -AsPlainText -Force) -Enabled $true
+Add-ADGroupMember -Identity "Account Operators" -Members svc_helpdesk
+
+Write-Host "Planting fake scheduled task #1 (top-level)..." -ForegroundColor Yellow
+schtasks /create /tn "WindowsUpdateCheck" /tr "calc.exe" /sc minute /mo 5 /ru SYSTEM
+
+Write-Host "Planting fake scheduled task #2 (hidden in subfolder)..." -ForegroundColor Yellow
+schtasks /create /tn "\Microsoft\Windows\SystemBackup" /tr "powershell.exe -WindowStyle Hidden -Command Start-Sleep 1" /sc onlogon /ru SYSTEM
+
+Write-Host "Planting fake service..." -ForegroundColor Yellow
+New-Service -Name "WinDefenderHelper" -BinaryPathName "C:\Windows\Temp\notreal.exe" -StartupType Automatic
+
+Write-Host "Planting fake Run key..." -ForegroundColor Yellow
+reg add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "SystemCheck" /t REG_SZ /d "calc.exe" /f
+
+Write-Host "Planting fake DNS forwarder..." -ForegroundColor Yellow
+Add-DnsServerForwarder -IPAddress 8.8.8.8
+
+Write-Host "`nDone planting. Now run recon.ps1 and see what it catches." -ForegroundColor Green

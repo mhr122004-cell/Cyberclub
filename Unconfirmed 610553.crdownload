@@ -1,0 +1,9 @@
+# ===== CLEANUP =====
+Remove-ADUser svc_backup2 -Confirm:$false
+Remove-ADUser svc_helpdesk -Confirm:$false
+schtasks /delete /tn "WindowsUpdateCheck" /f
+schtasks /delete /tn "\Microsoft\Windows\SystemBackup" /f
+Remove-Service -Name "WinDefenderHelper"
+reg delete "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "SystemCheck" /f
+Remove-DnsServerForwarder -IPAddress 8.8.8.8 -Force
+Write-Host "Cleanup done." -ForegroundColor Green
